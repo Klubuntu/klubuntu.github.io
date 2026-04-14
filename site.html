@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Klubuntu | Project Showcase</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <style>
     :root {
       --bg: #090b12;
@@ -171,6 +172,16 @@
 
     .badge-icon {
       margin-right: 6px;
+      font-size: .8rem;
+      width: 12px;
+      text-align: center;
+    }
+
+    .filter-icon {
+      margin-right: 6px;
+      font-size: .8rem;
+      width: 12px;
+      text-align: center;
     }
 
     .card h3 {
@@ -278,25 +289,37 @@
       return a.name.localeCompare(b.name);
     }
 
-    function getLanguageIcon(languageName) {
+    function getLanguageIconClass(languageName) {
       const key = (languageName || "").toLowerCase();
       const icons = {
-        javascript: "🟨",
-        typescript: "🔷",
-        python: "🐍",
-        java: "☕",
-        html: "🌐",
-        css: "🎨",
-        php: "🐘",
-        ruby: "💎",
-        go: "🐹",
-        rust: "🦀",
-        shell: "💻",
-        "c++": "⚙️",
-        c: "⚙️",
-        "c#": "🧩"
+        javascript: "fa-brands fa-js",
+        typescript: "fa-solid fa-code",
+        python: "fa-brands fa-python",
+        java: "fa-brands fa-java",
+        html: "fa-brands fa-html5",
+        css: "fa-brands fa-css3-alt",
+        php: "fa-brands fa-php",
+        ruby: "fa-solid fa-gem",
+        go: "fa-solid fa-g",
+        rust: "fa-solid fa-gear",
+        shell: "fa-solid fa-terminal",
+        "c++": "fa-solid fa-code",
+        c: "fa-solid fa-c",
+        "c#": "fa-solid fa-hashtag",
+        general: "fa-solid fa-box-archive"
       };
-      return icons[key] || "📦";
+      return icons[key] || "fa-solid fa-box-archive";
+    }
+
+    function getFilterIconClass(filterName) {
+      if (filterName === ALL_FILTER) return "fa-solid fa-layer-group";
+      const statusIcons = {
+        Popular: "fa-solid fa-fire",
+        "Live Demo": "fa-solid fa-up-right-from-square",
+        "Recently Updated": "fa-solid fa-clock-rotate-left",
+        Project: "fa-solid fa-folder-open"
+      };
+      return statusIcons[filterName] || getLanguageIconClass(filterName);
     }
 
     function createCard(project) {
@@ -319,10 +342,10 @@
         const badge = document.createElement("span");
         badge.className = "badge";
         if (badgeName === project.languageBadge) {
-          const icon = document.createElement("span");
+          const icon = document.createElement("i");
           icon.className = "badge-icon";
           icon.setAttribute("aria-hidden", "true");
-          icon.textContent = getLanguageIcon(badgeName);
+          icon.classList.add(...getLanguageIconClass(badgeName).split(" "));
           badge.appendChild(icon);
         }
         const label = document.createElement("span");
@@ -366,7 +389,15 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = "filter-btn";
-        button.textContent = filter;
+        button.dataset.filter = filter;
+        button.setAttribute("aria-label", `Filter by ${filter}`);
+        const icon = document.createElement("i");
+        icon.className = "filter-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.classList.add(...getFilterIconClass(filter).split(" "));
+        const label = document.createElement("span");
+        label.textContent = filter;
+        button.append(icon, label);
         button.setAttribute("aria-pressed", String(filter === selectedBadge));
         button.addEventListener("click", () => {
           selectedBadge = filter;
@@ -386,7 +417,7 @@
       for (const project of visibleProjects) createCard(project);
 
       for (const button of filtersContainer.querySelectorAll(".filter-btn")) {
-        const isSelected = button.textContent === selectedBadge;
+        const isSelected = button.dataset.filter === selectedBadge;
         button.setAttribute("aria-pressed", String(isSelected));
       }
     }
