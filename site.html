@@ -135,6 +135,27 @@
       transition: transform .2s ease, border-color .2s ease;
     }
 
+    .card.reveal-ready {
+      opacity: 0;
+      transform: translateY(14px);
+      will-change: transform, opacity;
+    }
+
+    .card.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity .45s ease, transform .45s ease, border-color .2s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card.reveal-ready,
+      .card.is-visible {
+        opacity: 1;
+        transform: none;
+        transition: border-color .2s ease;
+      }
+    }
+
     .card:hover {
       transform: translateY(-3px);
       border-color: #3a4d75;
@@ -253,10 +274,11 @@
     const title = document.getElementById("page-title");
     const USERNAME = "Klubuntu";
     const ALL_FILTER = "All";
-    const MAX_BADGES_PER_REPO = 2;
+    const MAX_BADGES_PER_REPO = 5;
     const POPULAR_STAR_THRESHOLD = 5;
     let selectedBadge = ALL_FILTER;
     let allProjects = [];
+    let cardRevealObserver;
 
     title.textContent = `${USERNAME}’s Best Projects`;
 
@@ -324,7 +346,7 @@
 
     function createCard(project) {
       const card = document.createElement("article");
-      card.className = "card";
+      card.className = "card reveal-ready";
 
       const meta = document.createElement("span");
       meta.className = "meta";
@@ -375,6 +397,36 @@
 
       card.append(meta, badges, heading, description, actions);
       container.appendChild(card);
+      return card;
+    }
+
+    function setupCardReveal(cards) {
+      if (!cards.length) return;
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (prefersReducedMotion) {
+        for (const card of cards) card.classList.add("is-visible");
+        return;
+      }
+
+      if (!("IntersectionObserver" in window)) {
+        for (const card of cards) card.classList.add("is-visible");
+        return;
+      }
+
+      if (!cardRevealObserver) {
+        cardRevealObserver = new IntersectionObserver((entries, observer) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        }, {
+          rootMargin: "0px 0px -10% 0px",
+          threshold: 0.1
+        });
+      }
+
+      for (const card of cards) cardRevealObserver.observe(card);
     }
 
     function renderFilters(projects) {
@@ -414,7 +466,8 @@
 
       container.innerHTML = "";
       count.textContent = `${visibleProjects.length} repositories${selectedBadge === ALL_FILTER ? "" : ` • filtered by ${selectedBadge}`}`;
-      for (const project of visibleProjects) createCard(project);
+      const cards = visibleProjects.map(project => createCard(project));
+      setupCardReveal(cards);
 
       for (const button of filtersContainer.querySelectorAll(".filter-btn")) {
         const isSelected = button.dataset.filter === selectedBadge;
