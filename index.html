@@ -191,13 +191,6 @@
       line-height: 1.2;
     }
 
-    .badge-icon {
-      margin-right: 6px;
-      font-size: .8rem;
-      width: 12px;
-      text-align: center;
-    }
-
     .filter-icon {
       margin-right: 6px;
       font-size: .8rem;
@@ -293,28 +286,6 @@
     function sortByStarsDesc(a, b) {
       if (b.starCount !== a.starCount) return b.starCount - a.starCount;
       return a.name.localeCompare(b.name);
-    }
-
-    function getLanguageIconClass(languageName) {
-      const key = (languageName || "").toLowerCase();
-      const icons = {
-        javascript: "fa-brands fa-js",
-        typescript: "fa-solid fa-code",
-        python: "fa-brands fa-python",
-        java: "fa-brands fa-java",
-        html: "fa-brands fa-html5",
-        css: "fa-brands fa-css3-alt",
-        php: "fa-brands fa-php",
-        ruby: "fa-solid fa-gem",
-        go: "fa-solid fa-code",
-        rust: "fa-solid fa-gear",
-        shell: "fa-solid fa-terminal",
-        "c++": "fa-solid fa-code",
-        c: "fa-solid fa-c",
-        "c#": "fa-solid fa-code",
-        general: "fa-solid fa-box-archive"
-      };
-      return icons[key] || "fa-solid fa-box-archive";
     }
 
     function getFilterIconClass(filterName) {
