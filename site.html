@@ -442,6 +442,11 @@
       text-align: center;
     }
 
+    .action-icon {
+      margin-right: 6px;
+      font-size: .9rem;
+    }
+
     .card h3 {
       margin: 0;
       font-size: 1.13rem;
@@ -839,9 +844,14 @@
 
       const repoLink = document.createElement("a");
       repoLink.href = project.repoUrl;
-      repoLink.textContent = "Repository";
       repoLink.rel = "noopener noreferrer";
       repoLink.target = "_blank";
+      const repoIcon = document.createElement("i");
+      repoIcon.className = "action-icon fa-brands fa-github";
+      repoIcon.setAttribute("aria-hidden", "true");
+      const repoLabel = document.createElement("span");
+      repoLabel.textContent = "Repository";
+      repoLink.append(repoIcon, repoLabel);
       actions.appendChild(repoLink);
 
       if (project.homepage) {
