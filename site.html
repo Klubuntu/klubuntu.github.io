@@ -182,6 +182,44 @@
       transition: opacity .3s ease;
     }
 
+    .magic-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      background: rgba(1, 4, 10, .82);
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s ease;
+    }
+
+    .magic-modal {
+      width: min(560px, 92vw);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      opacity: 0;
+      transform: translateY(14px) scale(.985);
+      transition: opacity .3s ease, transform .3s ease;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .35);
+    }
+
+    .magic-modal h3,
+    .magic-modal p {
+      margin: 0;
+    }
+
+    .magic-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
     .secret-builder-frame {
       width: min(860px, 94vw);
       max-height: 90vh;
@@ -266,6 +304,16 @@
       transform: translateY(0) scale(1);
     }
 
+    body.magic-modal-active .magic-modal-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    body.magic-modal-active .magic-modal {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
     .filters {
       display: flex;
       flex-wrap: wrap;
@@ -329,6 +377,8 @@
       .secret-cta,
       .secret-builder-overlay,
       .secret-builder-frame,
+      .magic-modal-overlay,
+      .magic-modal,
       body.secret-frame-active .wrap > * {
         transition: none;
       }
@@ -508,6 +558,17 @@
     </div>
   </div>
 
+  <div id="magic-modal-overlay" class="magic-modal-overlay" hidden>
+    <section class="magic-modal" role="dialog" aria-modal="true" aria-labelledby="magic-modal-title">
+      <h3 id="magic-modal-title">🪄 You found a secret!</h3>
+      <p>Congratulations, button wizard. You clicked the magic button 11 times and unlocked the cookie vault.</p>
+      <div class="magic-modal-actions">
+        <button id="magic-modal-close" type="button" class="secret-close">Maybe later</button>
+        <a id="magic-get-cookie" class="secret-launch" href="https://github.com/Klubuntu/klubuntu.github.io/tree/website" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-cookie-bite" aria-hidden="true"></i> Get cookie</a>
+      </div>
+    </section>
+  </div>
+
   <script>
     const container = document.getElementById("projects");
     const count = document.getElementById("project-count");
@@ -521,6 +582,9 @@
     const secretLaunch = document.getElementById("secret-launch");
     const secretBuilderOverlay = document.getElementById("secret-builder-overlay");
     const secretClose = document.getElementById("secret-close");
+    const magicModalOverlay = document.getElementById("magic-modal-overlay");
+    const magicModalClose = document.getElementById("magic-modal-close");
+    const magicGetCookie = document.getElementById("magic-get-cookie");
     const secretSourcesInput = document.getElementById("secret-sources");
     const optShowBadges = document.getElementById("opt-show-badges");
     const optShowTags = document.getElementById("opt-show-tags");
@@ -542,6 +606,7 @@
     let selectedFilterMode = FILTER_MODE_BADGES;
     let easterClickCount = 0;
     let easterUnlocked = false;
+    let magicModalOpen = false;
     let secretBuilderOpen = false;
     const displayOptions = {
       showBadges: true,
@@ -979,6 +1044,24 @@
       requestAnimationFrame(() => secretResetWrap.classList.add("is-visible"));
     }
 
+    function setMagicModalOpen(isOpen) {
+      magicModalOpen = isOpen;
+      if (isOpen) {
+        magicModalOverlay.hidden = false;
+        requestAnimationFrame(() => document.body.classList.add("magic-modal-active"));
+        return;
+      }
+      document.body.classList.remove("magic-modal-active");
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (prefersReducedMotion) {
+        magicModalOverlay.hidden = true;
+        return;
+      }
+      setTimeout(() => {
+        if (!magicModalOpen) magicModalOverlay.hidden = true;
+      }, 300);
+    }
+
     function applySecretConfig(config) {
       if (!config || typeof config !== "object") return;
       const owners = Array.isArray(config.owners)
@@ -1032,6 +1115,20 @@
     easterTrigger.addEventListener("click", () => {
       easterClickCount += 1;
       if (easterClickCount >= 5) unlockEasterEgg();
+      if (easterClickCount === 11) setMagicModalOpen(true);
+    });
+
+    magicModalClose.addEventListener("click", () => {
+      setMagicModalOpen(false);
+    });
+
+    magicModalOverlay.addEventListener("click", event => {
+      if (event.target !== magicModalOverlay) return;
+      setMagicModalOpen(false);
+    });
+
+    magicGetCookie.addEventListener("click", () => {
+      setMagicModalOpen(false);
     });
 
     secretLaunch.addEventListener("click", () => {
