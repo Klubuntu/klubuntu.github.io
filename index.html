@@ -166,6 +166,16 @@
       margin: 0;
     }
 
+    .secret-message {
+      min-height: 1.25rem;
+      font-size: .84rem;
+      color: var(--muted);
+    }
+
+    .secret-message.error {
+      color: #ffb4b4;
+    }
+
     .secret-input {
       width: 100%;
       border: 1px solid var(--border);
@@ -408,6 +418,7 @@
           <option value="frequency">By usage</option>
         </select>
       </div>
+      <p id="secret-message" class="secret-message" aria-live="polite"></p>
       <button id="secret-generate" type="button" class="secret-launch"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Generate</button>
     </section>
 
@@ -431,6 +442,7 @@
     const optShowTags = document.getElementById("opt-show-tags");
     const optSortBadges = document.getElementById("opt-sort-badges");
     const optSortFilters = document.getElementById("opt-sort-filters");
+    const secretMessage = document.getElementById("secret-message");
     const secretGenerate = document.getElementById("secret-generate");
     const filterModeButtons = Array.from(document.querySelectorAll("[data-mode]"));
     const ALL_FILTER = "All";
@@ -499,8 +511,7 @@
 
     function toBase64(text) {
       const bytes = new TextEncoder().encode(text);
-      let binary = "";
-      for (const byte of bytes) binary += String.fromCharCode(byte);
+      const binary = Array.from(bytes, byte => String.fromCharCode(byte)).join("");
       return btoa(binary);
     }
 
@@ -877,19 +888,19 @@
     }
 
     function buildSecretConfigFromForm() {
+      setSecretMessage("");
       const owners = parseSourcesInput(secretSourcesInput.value);
       if (!owners.length) {
-        alert("Please add at least one valid GitHub user/org.");
+        setSecretMessage("Please add at least one valid GitHub user/org.", true);
         return null;
       }
       const showBadges = optShowBadges.checked;
       const showTags = optShowTags.checked;
       if (!showBadges && !showTags) {
-        alert("Enable badges, tags, or both.");
+        setSecretMessage("Enable badges, tags, or both.", true);
         return null;
       }
       return {
-        id: typeof crypto.randomUUID === "function" ? crypto.randomUUID() : String(Date.now()),
         owners,
         showBadges,
         showTags,
@@ -897,6 +908,11 @@
         sortFilters: optSortFilters.value === "frequency" ? "frequency" : "alpha",
         defaultMode: FILTER_MODE_BADGES
       };
+    }
+
+    function setSecretMessage(text, isError = false) {
+      secretMessage.textContent = text;
+      secretMessage.classList.toggle("error", Boolean(isError));
     }
 
     easterTrigger.addEventListener("click", () => {
@@ -911,6 +927,7 @@
     secretGenerate.addEventListener("click", () => {
       const config = buildSecretConfigFromForm();
       if (!config) return;
+      setSecretMessage("Generating secret link…");
       const url = new URL(window.location.href);
       url.searchParams.set("SC", toBase64(JSON.stringify(config)));
       window.location.assign(url.toString());
