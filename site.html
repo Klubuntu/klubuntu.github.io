@@ -94,6 +94,28 @@
       font-size: .95rem;
     }
 
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 16px;
+    }
+
+    .filter-btn {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .02);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: .85rem;
+      cursor: pointer;
+    }
+
+    .filter-btn[aria-pressed="true"] {
+      border-color: rgba(122, 162, 255, .6);
+      background: rgba(122, 162, 255, .18);
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -126,6 +148,25 @@
       border: 1px solid rgba(122, 162, 255, .3);
       padding: 6px 10px;
       border-radius: 999px;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 24px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(92, 225, 230, .35);
+      background: rgba(92, 225, 230, .12);
+      color: #b9fbff;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: .75rem;
+      line-height: 1.2;
     }
 
     .card h3 {
@@ -185,6 +226,7 @@
       <p id="project-count">Scanning repositories…</p>
     </div>
 
+    <nav id="badge-filters" class="filters" aria-label="Filter projects by badges"></nav>
     <section id="projects" class="grid" aria-live="polite"></section>
     <footer>Built for klubuntu.github.io</footer>
   </main>
@@ -192,24 +234,38 @@
   <script>
     const container = document.getElementById("projects");
     const count = document.getElementById("project-count");
-    const MS_PER_DAY = 1000 * 60 * 60 * 24;
-    const RECENCY_WINDOW_DAYS = 120;
-    const RECENCY_SCORE_DIVISOR = 20;
+    const filtersContainer = document.getElementById("badge-filters");
+    const ALL_FILTER = "All";
+    let selectedBadge = ALL_FILTER;
+    let allProjects = [];
 
     function formatStars(starCount) {
       return `${starCount} ${starCount === 1 ? "star" : "stars"}`;
     }
 
-    function rankRepository(repo) {
-      const stars = repo.stargazers_count || 0;
-      const forks = repo.forks_count || 0;
-      const watchers = repo.watchers_count || 0;
-      const updatedAt = repo.updated_at ? new Date(repo.updated_at).getTime() : 0;
-      const safeUpdatedAt = Number.isFinite(updatedAt) ? updatedAt : 0;
-      const daysSinceUpdate = Math.max(0, (Date.now() - safeUpdatedAt) / MS_PER_DAY);
-      // Repositories updated in the last RECENCY_WINDOW_DAYS get a small ranking boost.
-      const recencyBonus = Math.max(0, RECENCY_WINDOW_DAYS - daysSinceUpdate) / RECENCY_SCORE_DIVISOR;
-      return stars * 10 + forks * 4 + watchers + recencyBonus;
+    function isRecentUpdate(updatedAtText) {
+      if (!updatedAtText) return false;
+      const timestamp = new Date(updatedAtText).getTime();
+      if (!Number.isFinite(timestamp)) return false;
+      const THIRTY_DAYS = 1000 * 60 * 60 * 24 * 30;
+      return Date.now() - timestamp <= THIRTY_DAYS;
+    }
+
+    function getBadges(repo) {
+      const badges = [];
+      badges.push(repo.language || "General");
+
+      if (repo.stargazers_count >= 5) badges.push("Popular");
+      else if (repo.homepage) badges.push("Live Demo");
+      else if (isRecentUpdate(repo.updated_at)) badges.push("Recently Updated");
+      else badges.push("Project");
+
+      return badges.slice(0, 2);
+    }
+
+    function sortByStarsDesc(a, b) {
+      if (b.starCount !== a.starCount) return b.starCount - a.starCount;
+      return a.name.localeCompare(b.name);
     }
 
     function createCard(project) {
@@ -225,6 +281,15 @@
 
       const description = document.createElement("p");
       description.textContent = project.description;
+
+      const badges = document.createElement("div");
+      badges.className = "badges";
+      for (const badgeName of project.badges) {
+        const badge = document.createElement("span");
+        badge.className = "badge";
+        badge.textContent = badgeName;
+        badges.appendChild(badge);
+      }
 
       const actions = document.createElement("div");
       actions.className = "actions";
@@ -245,37 +310,78 @@
         actions.appendChild(homeLink);
       }
 
-      card.append(meta, heading, description, actions);
+      card.append(meta, heading, badges, description, actions);
       container.appendChild(card);
+    }
+
+    function renderFilters(projects) {
+      const badgeSet = new Set();
+      for (const project of projects) {
+        for (const badge of project.badges) badgeSet.add(badge);
+      }
+
+      const filters = [ALL_FILTER, ...Array.from(badgeSet).sort((a, b) => a.localeCompare(b))];
+      filtersContainer.innerHTML = "";
+      for (const filter of filters) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "filter-btn";
+        button.textContent = filter;
+        button.setAttribute("aria-pressed", String(filter === selectedBadge));
+        button.addEventListener("click", () => {
+          selectedBadge = filter;
+          renderProjectList();
+        });
+        filtersContainer.appendChild(button);
+      }
+    }
+
+    function renderProjectList() {
+      const visibleProjects = selectedBadge === ALL_FILTER
+        ? allProjects
+        : allProjects.filter(project => project.badges.includes(selectedBadge));
+
+      container.innerHTML = "";
+      count.textContent = `${visibleProjects.length} repositories${selectedBadge === ALL_FILTER ? "" : ` • filtered by ${selectedBadge}`}`;
+      for (const project of visibleProjects) createCard(project);
+
+      for (const button of filtersContainer.querySelectorAll(".filter-btn")) {
+        const isSelected = button.textContent === selectedBadge;
+        button.setAttribute("aria-pressed", String(isSelected));
+      }
     }
 
     async function loadProjects() {
       try {
         const username = "Klubuntu";
-        // Fetch up to 100 repos to rank globally before selecting the top showcase entries.
+        // Fetch up to 100 repos to sort and display by star count.
         const response = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`);
         if (!response.ok) throw new Error("Failed to fetch repositories");
 
         const repositories = await response.json();
-        const best = repositories
+        allProjects = repositories
           .filter(repo => !repo.fork && !repo.archived && !repo.disabled)
-          .sort((a, b) => rankRepository(b) - rankRepository(a))
-          .slice(0, 12)
           .map(repo => {
-            const stars = formatStars(repo.stargazers_count);
+            const starCount = repo.stargazers_count || 0;
+            const stars = formatStars(starCount);
+            const badges = getBadges(repo);
             return {
               name: repo.name,
               category: repo.language ? `${repo.language} • ${stars}` : `Project • ${stars}`,
               description: repo.description || "No description provided yet.",
               repoUrl: repo.html_url,
-              homepage: repo.homepage || ""
+              homepage: repo.homepage || "",
+              starCount,
+              badges
             };
-          });
+          })
+          .sort(sortByStarsDesc);
 
-        count.textContent = `${best.length} featured projects from all repositories`;
-        best.forEach(createCard);
+        renderFilters(allProjects);
+        renderProjectList();
       } catch (error) {
         count.textContent = "Unable to load repositories (possible rate limit or network issue).";
+        filtersContainer.innerHTML = "";
         const fallback = document.createElement("article");
         fallback.className = "card";
 
