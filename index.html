@@ -169,6 +169,10 @@
       line-height: 1.2;
     }
 
+    .badge-icon {
+      margin-right: 6px;
+    }
+
     .card h3 {
       margin: 0;
       font-size: 1.13rem;
@@ -274,6 +278,27 @@
       return a.name.localeCompare(b.name);
     }
 
+    function getLanguageIcon(languageName) {
+      const key = (languageName || "").toLowerCase();
+      const icons = {
+        javascript: "🟨",
+        typescript: "🔷",
+        python: "🐍",
+        java: "☕",
+        html: "🌐",
+        css: "🎨",
+        php: "🐘",
+        ruby: "💎",
+        go: "🐹",
+        rust: "🦀",
+        shell: "🖥️",
+        "c++": "⚙️",
+        c: "⚙️",
+        "c#": "🧩"
+      };
+      return icons[key] || "📦";
+    }
+
     function createCard(project) {
       const card = document.createElement("article");
       card.className = "card";
@@ -290,10 +315,19 @@
 
       const badges = document.createElement("div");
       badges.className = "badges";
-      for (const badgeName of project.badges) {
+      for (const [index, badgeName] of project.badges.entries()) {
         const badge = document.createElement("span");
         badge.className = "badge";
-        badge.textContent = badgeName;
+        if (index === 0) {
+          const icon = document.createElement("span");
+          icon.className = "badge-icon";
+          icon.setAttribute("aria-hidden", "true");
+          icon.textContent = getLanguageIcon(badgeName);
+          badge.appendChild(icon);
+        }
+        const label = document.createElement("span");
+        label.textContent = badgeName;
+        badge.appendChild(label);
         badges.appendChild(badge);
       }
 
