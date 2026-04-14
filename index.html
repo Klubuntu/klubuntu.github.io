@@ -573,7 +573,7 @@
     const container = document.getElementById("projects");
     const count = document.getElementById("project-count");
     const filtersContainer = document.getElementById("badge-filters");
-    const title = document.getElementById("page-title");
+    const pageTitle = document.getElementById("page-title");
     const ownerSelect = document.getElementById("owner-select");
     const easterTrigger = document.getElementById("easter-trigger");
     const secretCtaWrap = document.getElementById("secret-cta-wrap");
@@ -620,7 +620,13 @@
     let allProjects = [];
     let cardRevealObserver;
 
-    title.textContent = `${selectedOwner}’s Best Projects`;
+    function setPageTitle(owner) {
+      const resolvedOwner = String(owner || "Klubuntu");
+      pageTitle.textContent = `${resolvedOwner}’s Best Projects`;
+      document.title = `${resolvedOwner} | Project Showcase`;
+    }
+
+    setPageTitle(selectedOwner);
 
     function formatStars(starCount) {
       return `${starCount} ${starCount === 1 ? "star" : "stars"}`;
@@ -720,7 +726,7 @@
       }
       selectedOwner = ownerOptionsCurrent[0];
       ownerSelect.value = selectedOwner;
-      title.textContent = `${selectedOwner}’s Best Projects`;
+      setPageTitle(selectedOwner);
     }
 
     function ownerSelectLabel(owner) {
@@ -1104,7 +1110,6 @@
       optShowTags.checked = displayOptions.showTags;
       optSortBadges.value = displayOptions.sortBadges;
       optSortFilters.value = displayOptions.sortFilters;
-      unlockEasterEgg();
       showSecretResetControl();
     }
 
