@@ -1086,11 +1086,12 @@
     }
 
     function applySecretConfig(config) {
-      if (!config || typeof config !== "object") return;
+      if (!config || typeof config !== "object") return false;
       const owners = Array.isArray(config.owners)
         ? config.owners.map(value => String(value).trim()).filter(isValidOwner)
         : [];
-      if (owners.length) setOwnerOptions(owners);
+      if (!owners.length) return false;
+      setOwnerOptions(owners);
       displayOptions.showBadges = config.showBadges !== false;
       displayOptions.showTags = config.showTags !== false;
       displayOptions.sortBadges = config.sortBadges === "alpha" ? "alpha" : "default";
@@ -1105,6 +1106,7 @@
       optSortFilters.value = displayOptions.sortFilters;
       unlockEasterEgg();
       showSecretResetControl();
+      return true;
     }
 
     function buildSecretConfigFromForm() {
