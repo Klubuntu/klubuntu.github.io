@@ -958,7 +958,7 @@
     async function loadProjects() {
       try {
         normalizeFilterMode();
-        title.textContent = `${selectedOwner}’s Best Projects`;
+        setPageTitle(selectedOwner);
         count.textContent = "Scanning repositories…";
         container.innerHTML = "";
         filtersContainer.innerHTML = "";
@@ -1024,6 +1024,7 @@
 
     ownerSelect.addEventListener("change", async () => {
       selectedOwner = ownerSelect.value;
+      setPageTitle(selectedOwner);
       selectedFilter = ALL_FILTER;
       await loadProjects();
     });
