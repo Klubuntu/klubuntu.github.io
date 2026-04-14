@@ -262,7 +262,7 @@
       <p id="project-count">Scanning repositories…</p>
     </div>
 
-    <nav id="badge-filters" class="filters" aria-label="Filter projects by badges"></nav>
+    <nav id="badge-filters" class="filters" aria-label="Filter projects by tags"></nav>
     <section id="projects" class="grid" aria-live="polite"></section>
     <footer>Built for klubuntu.github.io</footer>
   </main>
@@ -274,8 +274,7 @@
     const title = document.getElementById("page-title");
     const USERNAME = "Klubuntu";
     const ALL_FILTER = "All";
-    const MAX_BADGES_PER_REPO = 5;
-    const POPULAR_STAR_THRESHOLD = 5;
+    const MAX_TAGS_PER_REPO = 5;
     let selectedBadge = ALL_FILTER;
     let allProjects = [];
     let cardRevealObserver;
@@ -286,24 +285,9 @@
       return `${starCount} ${starCount === 1 ? "star" : "stars"}`;
     }
 
-    function isRecentUpdate(updatedAtText) {
-      if (!updatedAtText) return false;
-      const timestamp = new Date(updatedAtText).getTime();
-      if (!Number.isFinite(timestamp)) return false;
-      const THIRTY_DAYS = 1000 * 60 * 60 * 24 * 30;
-      return Date.now() - timestamp <= THIRTY_DAYS;
-    }
-
-    function getBadges(repo) {
-      const badges = [];
-      badges.push(repo.language || "General");
-
-      if (repo.stargazers_count >= POPULAR_STAR_THRESHOLD) badges.push("Popular");
-      else if (repo.homepage) badges.push("Live Demo");
-      else if (isRecentUpdate(repo.updated_at)) badges.push("Recently Updated");
-      else badges.push("Project");
-
-      return badges.slice(0, MAX_BADGES_PER_REPO);
+    function getTags(repo) {
+      if (!Array.isArray(repo.topics)) return [];
+      return repo.topics.slice(0, MAX_TAGS_PER_REPO);
     }
 
     function sortByStarsDesc(a, b) {
@@ -335,13 +319,7 @@
 
     function getFilterIconClass(filterName) {
       if (filterName === ALL_FILTER) return "fa-solid fa-layer-group";
-      const statusIcons = {
-        Popular: "fa-solid fa-fire",
-        "Live Demo": "fa-solid fa-up-right-from-square",
-        "Recently Updated": "fa-solid fa-clock-rotate-left",
-        Project: "fa-solid fa-folder-open"
-      };
-      return statusIcons[filterName] || getLanguageIconClass(filterName);
+      return "fa-solid fa-hashtag";
     }
 
     function createCard(project) {
@@ -358,22 +336,15 @@
       const description = document.createElement("p");
       description.textContent = project.description;
 
-      const badges = document.createElement("div");
-      badges.className = "badges";
-      for (const badgeName of project.badges) {
-        const badge = document.createElement("span");
-        badge.className = "badge";
-        if (badgeName === project.languageBadge) {
-          const icon = document.createElement("i");
-          icon.className = "badge-icon";
-          icon.setAttribute("aria-hidden", "true");
-          icon.classList.add(...getLanguageIconClass(badgeName).split(" "));
-          badge.appendChild(icon);
-        }
+      const tags = document.createElement("div");
+      tags.className = "badges";
+      for (const tagName of project.tags) {
+        const tag = document.createElement("span");
+        tag.className = "badge";
         const label = document.createElement("span");
-        label.textContent = badgeName;
-        badge.appendChild(label);
-        badges.appendChild(badge);
+        label.textContent = tagName;
+        tag.appendChild(label);
+        tags.appendChild(tag);
       }
 
       const actions = document.createElement("div");
@@ -395,7 +366,7 @@
         actions.appendChild(homeLink);
       }
 
-      card.append(meta, badges, heading, description, actions);
+      card.append(meta, tags, heading, description, actions);
       container.appendChild(card);
       return card;
     }
@@ -432,7 +403,7 @@
     function renderFilters(projects) {
       const badgeSet = new Set();
       for (const project of projects) {
-        for (const badge of project.badges) badgeSet.add(badge);
+        for (const tag of project.tags) badgeSet.add(tag);
       }
 
       const filters = [ALL_FILTER, ...Array.from(badgeSet).sort((a, b) => a.localeCompare(b))];
@@ -462,7 +433,7 @@
     function renderProjectList() {
       const visibleProjects = selectedBadge === ALL_FILTER
         ? allProjects
-        : allProjects.filter(project => project.badges.includes(selectedBadge));
+        : allProjects.filter(project => project.tags.includes(selectedBadge));
 
       container.innerHTML = "";
       count.textContent = `${visibleProjects.length} repositories${selectedBadge === ALL_FILTER ? "" : ` • filtered by ${selectedBadge}`}`;
@@ -478,7 +449,11 @@
     async function loadProjects() {
       try {
         // Fetch up to 100 repos to sort and display by star count.
-        const response = await fetch(`https://api.github.com/users/${USERNAME}/repos?per_page=100&sort=updated`);
+        const response = await fetch(`https://api.github.com/users/${USERNAME}/repos?per_page=100&sort=updated`, {
+          headers: {
+            Accept: "application/vnd.github+json"
+          }
+        });
         if (!response.ok) throw new Error("Failed to fetch repositories");
 
         const repositories = await response.json();
@@ -487,16 +462,15 @@
           .map(repo => {
             const starCount = repo.stargazers_count || 0;
             const stars = formatStars(starCount);
-            const badges = getBadges(repo);
+            const tags = getTags(repo);
             return {
               name: repo.name,
-              languageBadge: repo.language || "General",
               category: repo.language ? `${repo.language} • ${stars}` : `Project • ${stars}`,
               description: repo.description || "No description provided yet.",
               repoUrl: repo.html_url,
               homepage: repo.homepage || "",
               starCount,
-              badges
+              tags
             };
           })
           .sort(sortByStarsDesc);
