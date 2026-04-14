@@ -278,7 +278,7 @@
 <body>
   <main class="wrap">
     <section class="hero">
-      <div class="pill"><span role="img" aria-label="Rocket ship emoji">🚀</span> Project Showcase • Modern Layout</div>
+      <div class="pill"><span aria-hidden="true">🚀</span> Project Showcase • Modern Layout</div>
       <h1 id="page-title">Klubuntu’s Best Projects</h1>
       <p class="lead">
         A curated portfolio pulled from all Klubuntu GitHub repositories, featuring the strongest projects
@@ -354,9 +354,9 @@
       badges.push(repo.language || "General");
 
       if (repo.stargazers_count >= POPULAR_STAR_THRESHOLD) badges.push("Popular");
-      else if (repo.homepage) badges.push("Live Demo");
-      else if (isRecentUpdate(repo.updated_at)) badges.push("Recently Updated");
-      else badges.push("Project");
+      if (repo.homepage) badges.push("Live Demo");
+      if (isRecentUpdate(repo.updated_at)) badges.push("Recently Updated");
+      if (badges.length === 1) badges.push("Project");
 
       return badges.slice(0, MAX_BADGES_PER_REPO);
     }
@@ -434,7 +434,7 @@
         actions.appendChild(homeLink);
       }
 
-      card.append(meta, labels, heading, description, actions);
+      card.append(meta, heading, labels, description, actions);
       container.appendChild(card);
       return card;
     }
