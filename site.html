@@ -60,6 +60,16 @@
       margin-bottom: 14px;
     }
 
+    .pill-button {
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .pill-button:focus-visible {
+      outline: 2px solid var(--accent-2);
+      outline-offset: 2px;
+    }
+
     h1 {
       margin: 0 0 12px;
       font-size: clamp(2rem, 3.6vw, 3.5rem);
@@ -120,6 +130,67 @@
     .mode-switch {
       display: inline-flex;
       gap: 8px;
+    }
+
+    .secret-cta {
+      margin: 16px 2px 0;
+    }
+
+    .secret-launch {
+      border: 1px solid rgba(77, 213, 153, .5);
+      background: rgba(77, 213, 153, .2);
+      color: #b9ffdf;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: .9rem;
+      cursor: pointer;
+    }
+
+    .secret-launch:hover {
+      border-color: rgba(77, 213, 153, .75);
+      background: rgba(77, 213, 153, .3);
+    }
+
+    .secret-builder {
+      margin: 14px 0 16px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(18, 23, 36, .8);
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .secret-builder h3,
+    .secret-builder p {
+      margin: 0;
+    }
+
+    .secret-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .04);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: .88rem;
+    }
+
+    .secret-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .secret-select {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .04);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: .85rem;
     }
 
     .filters {
@@ -285,12 +356,16 @@
 <body>
   <main class="wrap">
     <section class="hero">
-      <div class="pill"><span aria-hidden="true">🚀</span> Project Showcase • Modern Layout</div>
+      <button id="easter-trigger" type="button" class="pill pill-button"><span aria-hidden="true">🚀</span> Project Showcase • Modern Layout</button>
       <h1 id="page-title">Klubuntu’s Best Projects</h1>
       <p class="lead">
         A curated portfolio created with 21st-century layout by GitHub Agent
       </p>
     </section>
+
+    <div id="secret-cta-wrap" class="secret-cta" hidden>
+      <button id="secret-launch" type="button" class="secret-launch"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Make your own</button>
+    </div>
 
     <div class="section-head">
       <h2>Featured Work</h2>
@@ -312,6 +387,30 @@
       </div>
     </div>
 
+    <section id="secret-builder" class="secret-builder" hidden>
+      <h3>Secret Showcase Builder</h3>
+      <p>Add users/orgs and options, then generate your private SC link.</p>
+      <label for="secret-sources">GitHub users/orgs (comma-separated)</label>
+      <input id="secret-sources" class="secret-input" type="text" placeholder="Klubuntu, RevoProject, your-org">
+      <div class="secret-options">
+        <label><input id="opt-show-badges" type="checkbox" checked> Show badges</label>
+        <label><input id="opt-show-tags" type="checkbox" checked> Show tags</label>
+      </div>
+      <div class="secret-options">
+        <label for="opt-sort-badges">Sort badges</label>
+        <select id="opt-sort-badges" class="secret-select">
+          <option value="default">Default</option>
+          <option value="alpha">A→Z</option>
+        </select>
+        <label for="opt-sort-filters">Sort filters</label>
+        <select id="opt-sort-filters" class="secret-select">
+          <option value="alpha">A→Z</option>
+          <option value="frequency">By usage</option>
+        </select>
+      </div>
+      <button id="secret-generate" type="button" class="secret-launch"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Generate</button>
+    </section>
+
     <nav id="badge-filters" class="filters" aria-label="Filter projects by badges"></nav>
     <section id="projects" class="grid" aria-live="polite"></section>
     <footer>Built for klubuntu.github.io</footer>
@@ -323,6 +422,16 @@
     const filtersContainer = document.getElementById("badge-filters");
     const title = document.getElementById("page-title");
     const ownerSelect = document.getElementById("owner-select");
+    const easterTrigger = document.getElementById("easter-trigger");
+    const secretCtaWrap = document.getElementById("secret-cta-wrap");
+    const secretLaunch = document.getElementById("secret-launch");
+    const secretBuilder = document.getElementById("secret-builder");
+    const secretSourcesInput = document.getElementById("secret-sources");
+    const optShowBadges = document.getElementById("opt-show-badges");
+    const optShowTags = document.getElementById("opt-show-tags");
+    const optSortBadges = document.getElementById("opt-sort-badges");
+    const optSortFilters = document.getElementById("opt-sort-filters");
+    const secretGenerate = document.getElementById("secret-generate");
     const filterModeButtons = Array.from(document.querySelectorAll("[data-mode]"));
     const ALL_FILTER = "All";
     const MAX_BADGES_PER_REPO = 5;
@@ -330,9 +439,19 @@
     const POPULAR_STAR_THRESHOLD = 5;
     const FILTER_MODE_TAGS = "tags";
     const FILTER_MODE_BADGES = "badges";
+    const ownerOptionsDefault = Array.from(ownerSelect.options).map(option => option.value);
+    let ownerOptionsCurrent = [...ownerOptionsDefault];
     let selectedOwner = ownerSelect.value;
     let selectedFilter = ALL_FILTER;
     let selectedFilterMode = FILTER_MODE_BADGES;
+    let easterClickCount = 0;
+    let easterUnlocked = false;
+    const displayOptions = {
+      showBadges: true,
+      showTags: true,
+      sortBadges: "default",
+      sortFilters: "alpha"
+    };
     let allProjects = [];
     let cardRevealObserver;
 
@@ -372,6 +491,96 @@
       return a.name.localeCompare(b.name);
     }
 
+    function normalizeFilterMode() {
+      if (selectedFilterMode === FILTER_MODE_BADGES && !displayOptions.showBadges) selectedFilterMode = FILTER_MODE_TAGS;
+      if (selectedFilterMode === FILTER_MODE_TAGS && !displayOptions.showTags) selectedFilterMode = FILTER_MODE_BADGES;
+      if (!displayOptions.showBadges && !displayOptions.showTags) displayOptions.showBadges = true;
+    }
+
+    function toBase64(text) {
+      return btoa(unescape(encodeURIComponent(text)));
+    }
+
+    function fromBase64(encodedText) {
+      return decodeURIComponent(escape(atob(encodedText)));
+    }
+
+    function parseSecretConfigFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const encoded = params.get("SC");
+      if (!encoded) return null;
+      try {
+        const parsed = JSON.parse(fromBase64(encoded));
+        if (!parsed || typeof parsed !== "object") return null;
+        return parsed;
+      } catch {
+        return null;
+      }
+    }
+
+    function isValidOwner(owner) {
+      return /^[A-Za-z\d](?:[A-Za-z\d-]{0,37}[A-Za-z\d])?$/.test(owner);
+    }
+
+    function parseSourcesInput(rawValue) {
+      const unique = new Set();
+      for (const part of rawValue.split(",")) {
+        const owner = part.trim();
+        if (!owner) continue;
+        if (!isValidOwner(owner)) continue;
+        unique.add(owner);
+      }
+      return Array.from(unique);
+    }
+
+    function setOwnerOptions(owners) {
+      ownerOptionsCurrent = owners.length ? owners : [...ownerOptionsDefault];
+      ownerSelect.innerHTML = "";
+      for (const owner of ownerOptionsCurrent) {
+        const option = document.createElement("option");
+        option.value = owner;
+        option.textContent = ownerOptionsDefault.includes(owner) ? ownerSelectLabel(owner) : `${owner} (custom)`;
+        ownerSelect.appendChild(option);
+      }
+      selectedOwner = ownerOptionsCurrent[0];
+      ownerSelect.value = selectedOwner;
+      title.textContent = `${selectedOwner}’s Best Projects`;
+    }
+
+    function ownerSelectLabel(owner) {
+      const defaultLabelMap = {
+        Klubuntu: "Klubuntu (user)",
+        RevoProject: "RevoProject (org)",
+        "open-itvt": "open-itvt (org)",
+        "OnerOS-Project": "OnerOS-Project (org)",
+        "Cube-Devs": "Cube-Devs (org)"
+      };
+      return defaultLabelMap[owner] || owner;
+    }
+
+    function getLanguageIconClass(languageName) {
+      const normalized = String(languageName || "").toLowerCase();
+      const iconMap = {
+        python: "fa-brands fa-python",
+        rust: "fa-brands fa-rust",
+        javascript: "fa-brands fa-js",
+        typescript: "fa-solid fa-code",
+        java: "fa-brands fa-java",
+        go: "fa-solid fa-code",
+        "c++": "fa-solid fa-code",
+        c: "fa-solid fa-code",
+        "c#": "fa-solid fa-code",
+        php: "fa-brands fa-php",
+        ruby: "fa-solid fa-gem",
+        kotlin: "fa-solid fa-code",
+        swift: "fa-brands fa-swift",
+        html: "fa-brands fa-html5",
+        css: "fa-brands fa-css3-alt",
+        shell: "fa-solid fa-terminal"
+      };
+      return iconMap[normalized] || "fa-solid fa-code";
+    }
+
     function getFilterIconClass(filterName) {
       if (filterName === ALL_FILTER) return "fa-solid fa-layer-group";
       return selectedFilterMode === FILTER_MODE_TAGS ? "fa-solid fa-hashtag" : "fa-solid fa-certificate";
@@ -382,8 +591,12 @@
     }
 
     function updateModeButtons() {
+      normalizeFilterMode();
       for (const button of filterModeButtons) {
+        const mode = button.dataset.mode;
+        const modeEnabled = mode === FILTER_MODE_BADGES ? displayOptions.showBadges : displayOptions.showTags;
         const isSelected = button.dataset.mode === selectedFilterMode;
+        button.disabled = !modeEnabled;
         button.setAttribute("aria-pressed", String(isSelected));
       }
     }
@@ -404,27 +617,34 @@
 
       const labels = document.createElement("div");
       labels.className = "badges";
-      for (const [index, badgeName] of project.badges.entries()) {
-        const badge = document.createElement("span");
-        badge.className = "badge badge-kind";
-        if (index === 0) {
-          const icon = document.createElement("i");
-          icon.className = "badge-icon fa-solid fa-code";
-          icon.setAttribute("aria-hidden", "true");
-          badge.appendChild(icon);
+      const badgesToRender = displayOptions.sortBadges === "alpha"
+        ? [...project.badges].sort((a, b) => a.localeCompare(b))
+        : project.badges;
+      if (displayOptions.showBadges) {
+        for (const [index, badgeName] of badgesToRender.entries()) {
+          const badge = document.createElement("span");
+          badge.className = "badge badge-kind";
+          if (index === 0) {
+            const icon = document.createElement("i");
+            icon.className = `badge-icon ${getLanguageIconClass(badgeName)}`;
+            icon.setAttribute("aria-hidden", "true");
+            badge.appendChild(icon);
+          }
+          const label = document.createElement("span");
+          label.textContent = badgeName;
+          badge.appendChild(label);
+          labels.appendChild(badge);
         }
-        const label = document.createElement("span");
-        label.textContent = badgeName;
-        badge.appendChild(label);
-        labels.appendChild(badge);
       }
-      for (const tagName of project.tags) {
-        const tag = document.createElement("span");
-        tag.className = "badge tag-kind";
-        const label = document.createElement("span");
-        label.textContent = tagName;
-        tag.appendChild(label);
-        labels.appendChild(tag);
+      if (displayOptions.showTags) {
+        for (const tagName of project.tags) {
+          const tag = document.createElement("span");
+          tag.className = "badge tag-kind";
+          const label = document.createElement("span");
+          label.textContent = tagName;
+          tag.appendChild(label);
+          labels.appendChild(tag);
+        }
       }
 
       const actions = document.createElement("div");
@@ -481,12 +701,24 @@
     }
 
     function renderFilters(projects) {
+      normalizeFilterMode();
       const badgeSet = new Set();
+      const usageCount = new Map();
       for (const project of projects) {
-        for (const filterValue of getProjectFilters(project)) badgeSet.add(filterValue);
+        for (const filterValue of getProjectFilters(project)) {
+          badgeSet.add(filterValue);
+          usageCount.set(filterValue, (usageCount.get(filterValue) || 0) + 1);
+        }
       }
 
-      const filters = [ALL_FILTER, ...Array.from(badgeSet).sort((a, b) => a.localeCompare(b))];
+      const filtersSorted = Array.from(badgeSet).sort((a, b) => {
+        if (displayOptions.sortFilters === "frequency") {
+          const countDiff = (usageCount.get(b) || 0) - (usageCount.get(a) || 0);
+          if (countDiff !== 0) return countDiff;
+        }
+        return a.localeCompare(b);
+      });
+      const filters = [ALL_FILTER, ...filtersSorted];
       filtersContainer.setAttribute("aria-label", `Filter projects by ${selectedFilterMode}`);
       filtersContainer.innerHTML = "";
       for (const filter of filters) {
@@ -529,6 +761,7 @@
 
     async function loadProjects() {
       try {
+        normalizeFilterMode();
         title.textContent = `${selectedOwner}’s Best Projects`;
         count.textContent = "Scanning repositories…";
         container.innerHTML = "";
@@ -610,6 +843,75 @@
       });
     }
 
+    function unlockEasterEgg() {
+      if (easterUnlocked) return;
+      easterUnlocked = true;
+      secretCtaWrap.hidden = false;
+    }
+
+    function applySecretConfig(config) {
+      if (!config || typeof config !== "object") return;
+      const owners = Array.isArray(config.owners)
+        ? config.owners.map(value => String(value).trim()).filter(isValidOwner)
+        : [];
+      if (owners.length) setOwnerOptions(owners);
+      displayOptions.showBadges = config.showBadges !== false;
+      displayOptions.showTags = config.showTags !== false;
+      displayOptions.sortBadges = config.sortBadges === "alpha" ? "alpha" : "default";
+      displayOptions.sortFilters = config.sortFilters === "frequency" ? "frequency" : "alpha";
+      selectedFilterMode = config.defaultMode === FILTER_MODE_TAGS ? FILTER_MODE_TAGS : FILTER_MODE_BADGES;
+      normalizeFilterMode();
+      updateModeButtons();
+      secretSourcesInput.value = ownerOptionsCurrent.join(", ");
+      optShowBadges.checked = displayOptions.showBadges;
+      optShowTags.checked = displayOptions.showTags;
+      optSortBadges.value = displayOptions.sortBadges;
+      optSortFilters.value = displayOptions.sortFilters;
+      unlockEasterEgg();
+    }
+
+    function buildSecretConfigFromForm() {
+      const owners = parseSourcesInput(secretSourcesInput.value);
+      if (!owners.length) {
+        alert("Please add at least one valid GitHub user/org.");
+        return null;
+      }
+      const showBadges = optShowBadges.checked;
+      const showTags = optShowTags.checked;
+      if (!showBadges && !showTags) {
+        alert("Enable badges, tags, or both.");
+        return null;
+      }
+      return {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        owners,
+        showBadges,
+        showTags,
+        sortBadges: optSortBadges.value === "alpha" ? "alpha" : "default",
+        sortFilters: optSortFilters.value === "frequency" ? "frequency" : "alpha",
+        defaultMode: FILTER_MODE_BADGES
+      };
+    }
+
+    easterTrigger.addEventListener("click", () => {
+      easterClickCount += 1;
+      if (easterClickCount >= 5) unlockEasterEgg();
+    });
+
+    secretLaunch.addEventListener("click", () => {
+      secretBuilder.hidden = !secretBuilder.hidden;
+    });
+
+    secretGenerate.addEventListener("click", () => {
+      const config = buildSecretConfigFromForm();
+      if (!config) return;
+      const url = new URL(window.location.href);
+      url.searchParams.set("SC", toBase64(JSON.stringify(config)));
+      window.location.assign(url.toString());
+    });
+
+    const parsedSecretConfig = parseSecretConfigFromUrl();
+    applySecretConfig(parsedSecretConfig);
     updateModeButtons();
     loadProjects();
   </script>
