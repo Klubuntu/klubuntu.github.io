@@ -521,7 +521,6 @@
     const secretLaunch = document.getElementById("secret-launch");
     const secretBuilderOverlay = document.getElementById("secret-builder-overlay");
     const secretClose = document.getElementById("secret-close");
-    const secretBuilder = document.getElementById("secret-builder");
     const secretSourcesInput = document.getElementById("secret-sources");
     const optShowBadges = document.getElementById("opt-show-badges");
     const optShowTags = document.getElementById("opt-show-tags");
@@ -978,11 +977,6 @@
     function showSecretResetControl() {
       secretResetWrap.hidden = false;
       requestAnimationFrame(() => secretResetWrap.classList.add("is-visible"));
-    }
-
-    function hideSecretResetControl() {
-      secretResetWrap.classList.remove("is-visible");
-      secretResetWrap.hidden = true;
     }
 
     function applySecretConfig(config) {
