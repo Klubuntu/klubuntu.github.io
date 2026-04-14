@@ -564,7 +564,7 @@
       <p>Congratulations, button wizard. You clicked the magic button 11 times and unlocked the cookie vault.</p>
       <div class="magic-modal-actions">
         <button id="magic-modal-close" type="button" class="secret-close">Maybe later</button>
-        <a id="magic-get-cookie" class="secret-launch" href="https://github.com/Klubuntu/klubuntu.github.io/tree/website" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-cookie-bite" aria-hidden="true"></i> Get cookie</a>
+        <a id="magic-get-cookie" class="secret-launch" href="https://github.com/Klubuntu/klubuntu.github.io/tree/website" target="_blank" rel="noopener noreferrer" aria-label="Visit the website branch repository to get your cookie"><i class="fa-solid fa-cookie-bite" aria-hidden="true"></i> Get cookie</a>
       </div>
     </section>
   </div>
@@ -597,6 +597,8 @@
     const MAX_BADGES_PER_REPO = 5;
     const MAX_TAGS_PER_REPO = 5;
     const POPULAR_STAR_THRESHOLD = 5;
+    const EASTER_UNLOCK_CLICK_THRESHOLD = 5;
+    const MAGIC_MODAL_CLICK_THRESHOLD = 11;
     const FILTER_MODE_TAGS = "tags";
     const FILTER_MODE_BADGES = "badges";
     const ownerOptionsDefault = Array.from(ownerSelect.options).map(option => option.value);
@@ -1114,8 +1116,8 @@
 
     easterTrigger.addEventListener("click", () => {
       easterClickCount += 1;
-      if (easterClickCount >= 5) unlockEasterEgg();
-      if (easterClickCount === 11) setMagicModalOpen(true);
+      if (easterClickCount >= EASTER_UNLOCK_CLICK_THRESHOLD) unlockEasterEgg();
+      if (easterClickCount === MAGIC_MODAL_CLICK_THRESHOLD) setMagicModalOpen(true);
     });
 
     magicModalClose.addEventListener("click", () => {
