@@ -564,7 +564,7 @@
       <p>Congratulations, button wizard. You clicked the magic button 11 times and unlocked the cookie vault.</p>
       <div class="magic-modal-actions">
         <button id="magic-modal-close" type="button" class="secret-close">Maybe later</button>
-        <a id="magic-get-cookie" class="secret-launch" href="https://github.com/Klubuntu/klubuntu.github.io/tree/website" target="_blank" rel="noopener noreferrer" aria-label="Visit the website branch repository to get your cookie"><i class="fa-solid fa-cookie-bite" aria-hidden="true"></i> Get cookie</a>
+        <a id="magic-get-cookie" class="secret-launch" href="https://github.com/Klubuntu/klubuntu.github.io/tree/website" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-cookie-bite" aria-hidden="true"></i> Get cookie</a>
       </div>
     </section>
   </div>
@@ -584,7 +584,6 @@
     const secretClose = document.getElementById("secret-close");
     const magicModalOverlay = document.getElementById("magic-modal-overlay");
     const magicModalClose = document.getElementById("magic-modal-close");
-    const magicGetCookie = document.getElementById("magic-get-cookie");
     const secretSourcesInput = document.getElementById("secret-sources");
     const optShowBadges = document.getElementById("opt-show-badges");
     const optShowTags = document.getElementById("opt-show-tags");
@@ -1126,10 +1125,6 @@
 
     magicModalOverlay.addEventListener("click", event => {
       if (event.target !== magicModalOverlay) return;
-      setMagicModalOpen(false);
-    });
-
-    magicGetCookie.addEventListener("click", () => {
       setMagicModalOpen(false);
     });
 
