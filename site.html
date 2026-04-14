@@ -227,6 +227,13 @@
       color: #ffe0b3;
     }
 
+    .badge-icon {
+      margin-right: 6px;
+      font-size: .72rem;
+      width: 10px;
+      text-align: center;
+    }
+
     .filter-icon {
       margin-right: 6px;
       font-size: .8rem;
@@ -281,8 +288,7 @@
       <div class="pill"><span aria-hidden="true">🚀</span> Project Showcase • Modern Layout</div>
       <h1 id="page-title">Klubuntu’s Best Projects</h1>
       <p class="lead">
-        A curated portfolio pulled from all Klubuntu GitHub repositories, featuring the strongest projects
-        first with a clean, responsive 21st-century layout.
+        A curated portfolio created with 21th-century layout by GitHub Agent
       </p>
     </section>
 
@@ -301,8 +307,8 @@
         <option value="Cube-Devs">Cube-Devs (org)</option>
       </select>
       <div class="mode-switch" role="group" aria-label="Switch filter type">
-        <button id="filter-mode-tags" type="button" class="filter-btn" data-mode="tags" aria-pressed="true">Filter: Tags</button>
-        <button id="filter-mode-badges" type="button" class="filter-btn" data-mode="badges" aria-pressed="false">Filter: Badges</button>
+        <button id="filter-mode-tags" type="button" class="filter-btn" data-mode="tags" aria-pressed="false">Filter: Tags</button>
+        <button id="filter-mode-badges" type="button" class="filter-btn" data-mode="badges" aria-pressed="true">Filter: Badges</button>
       </div>
     </div>
 
@@ -326,7 +332,7 @@
     const FILTER_MODE_BADGES = "badges";
     let selectedOwner = ownerSelect.value;
     let selectedFilter = ALL_FILTER;
-    let selectedFilterMode = FILTER_MODE_TAGS;
+    let selectedFilterMode = FILTER_MODE_BADGES;
     let allProjects = [];
     let cardRevealObserver;
 
@@ -398,9 +404,15 @@
 
       const labels = document.createElement("div");
       labels.className = "badges";
-      for (const badgeName of project.badges) {
+      for (const [index, badgeName] of project.badges.entries()) {
         const badge = document.createElement("span");
         badge.className = "badge badge-kind";
+        if (index === 0) {
+          const icon = document.createElement("i");
+          icon.className = "badge-icon fa-solid fa-code";
+          icon.setAttribute("aria-hidden", "true");
+          badge.appendChild(icon);
+        }
         const label = document.createElement("span");
         label.textContent = badgeName;
         badge.appendChild(label);
