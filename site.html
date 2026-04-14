@@ -1,1 +1,244 @@
-<p1>Test</p1>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Klubuntu | Project Showcase</title>
+  <style>
+    :root {
+      --bg: #090b12;
+      --surface: #121724;
+      --surface-2: #1b2436;
+      --text: #e9eeff;
+      --muted: #a4b2d0;
+      --accent: #7aa2ff;
+      --accent-2: #5ce1e6;
+      --border: #2b3852;
+      --shadow: 0 14px 40px rgba(0, 0, 0, .35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 500px at 10% -10%, rgba(122, 162, 255, .18), transparent),
+        radial-gradient(900px 450px at 100% 0%, rgba(92, 225, 230, .14), transparent),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      width: min(1100px, 92vw);
+      margin: 0 auto;
+      padding: 56px 0 80px;
+    }
+
+    .hero {
+      background: linear-gradient(170deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 32px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(4px);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent-2);
+      background: rgba(92, 225, 230, .12);
+      border: 1px solid rgba(92, 225, 230, .3);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      letter-spacing: .02em;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 3.6vw, 3.5rem);
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 70ch;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.3vw, 1.12rem);
+      line-height: 1.7;
+    }
+
+    .section-head {
+      margin: 36px 2px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(1.2rem, 2vw, 1.7rem);
+      letter-spacing: -.01em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 220px;
+      transition: transform .2s ease, border-color .2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: #3a4d75;
+    }
+
+    .meta {
+      display: inline-block;
+      width: fit-content;
+      font-size: 12px;
+      color: var(--accent);
+      background: rgba(122, 162, 255, .12);
+      border: 1px solid rgba(122, 162, 255, .3);
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 1.13rem;
+      letter-spacing: -.01em;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: .95rem;
+      flex-grow: 1;
+    }
+
+    .card .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .card a {
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: .88rem;
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .card a:hover {
+      border-color: #4b5e84;
+    }
+
+    footer {
+      margin-top: 26px;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="pill">🚀 Project Showcase • Modern Layout</div>
+      <h1>Klubuntu’s Best Projects</h1>
+      <p class="lead">
+        A curated portfolio pulled from this repository, featuring standout plugins and experiments.
+        Clean cards, responsive grid, and quick links for browsing source and details.
+      </p>
+    </section>
+
+    <div class="section-head">
+      <h2>Featured Work</h2>
+      <p id="project-count">Loading projects…</p>
+    </div>
+
+    <section id="projects" class="grid" aria-live="polite"></section>
+    <footer>Built for klubuntu.github.io</footer>
+  </main>
+
+  <script>
+    const projects = [
+      {
+        name: "Platform Icons",
+        category: "Cumcord Plugin",
+        description: "Shows platform icons for user status across desktop, mobile, and web.",
+        author: "Cynosphere",
+        links: [
+          { label: "Source", href: "./cc-plugins/PlatformIcons/plugin.js" },
+          { label: "Manifest", href: "./cc-plugins/PlatformIcons/plugin.json" }
+        ]
+      },
+      {
+        name: "ReadAllNotificationsButton",
+        category: "BetterDiscord Plugin",
+        description: "Adds quick clear/read-all actions to server list and mentions popout.",
+        author: "DevilBro",
+        links: [
+          { label: "Source", href: "./cc-plugins/ReadAllNotifications/js/ReadAllNotificationsButton.plugin.js" },
+          { label: "Manifest", href: "./cc-plugins/ReadAllNotifications/cumcord_manifest.json" }
+        ]
+      },
+      {
+        name: "Site Prototype",
+        category: "Web Experiment",
+        description: "Early website test page included in this repository.",
+        author: "Klubuntu",
+        links: [
+          { label: "Open Page", href: "./site/test.html" }
+        ]
+      }
+    ];
+
+    const container = document.getElementById("projects");
+    const count = document.getElementById("project-count");
+    count.textContent = `${projects.length} featured projects`;
+
+    for (const project of projects) {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `
+        <span class="meta">${project.category}</span>
+        <h3>${project.name}</h3>
+        <p>${project.description}</p>
+        <div class="actions">
+          ${project.links.map(link => `<a href="${link.href}">${link.label}</a>`).join("")}
+        </div>
+      `;
+      container.appendChild(card);
+    }
+  </script>
+</body>
+</html>
