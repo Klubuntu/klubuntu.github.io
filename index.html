@@ -481,6 +481,17 @@
       border-color: #4b5e84;
     }
 
+    .card a.sponsor-link {
+      border-color: rgba(255, 92, 153, .7);
+      background: rgba(255, 92, 153, .14);
+      color: #ffd6e7;
+    }
+
+    .card a.sponsor-link:hover {
+      border-color: rgba(255, 92, 153, .95);
+      background: rgba(255, 92, 153, .2);
+    }
+
     footer {
       margin-top: 26px;
       color: var(--muted);
@@ -640,6 +651,12 @@
     function getTags(repo) {
       if (!Array.isArray(repo.topics)) return [];
       return repo.topics.slice(0, MAX_TAGS_PER_REPO);
+    }
+
+    function getSponsorUrl(repo) {
+      const ownerLogin = repo?.owner?.login;
+      if (!ownerLogin) return "";
+      return `https://github.com/sponsors/${ownerLogin}`;
     }
 
     function getFilterTags(repo) {
@@ -859,12 +876,29 @@
       repoLink.append(repoIcon, repoLabel);
       actions.appendChild(repoLink);
 
+      if (project.sponsorUrl) {
+        const sponsorLink = document.createElement("a");
+        sponsorLink.href = project.sponsorUrl;
+        sponsorLink.className = "sponsor-link";
+        sponsorLink.rel = "noopener noreferrer";
+        sponsorLink.target = "_blank";
+        const sponsorLabel = document.createElement("span");
+        sponsorLabel.textContent = "Sponsor";
+        sponsorLink.appendChild(sponsorLabel);
+        actions.appendChild(sponsorLink);
+      }
+
       if (project.homepage) {
         const homeLink = document.createElement("a");
         homeLink.href = project.homepage;
-        homeLink.textContent = "Live";
         homeLink.rel = "noopener noreferrer";
         homeLink.target = "_blank";
+        const homeIcon = document.createElement("i");
+        homeIcon.className = "action-icon fa-solid fa-book";
+        homeIcon.setAttribute("aria-hidden", "true");
+        const homeLabel = document.createElement("span");
+        homeLabel.textContent = "Live";
+        homeLink.append(homeIcon, homeLabel);
         actions.appendChild(homeLink);
       }
 
@@ -994,12 +1028,14 @@
             const stars = formatStars(starCount);
             const tags = getTags(repo);
             const filterTags = getFilterTags(repo);
+            const sponsorUrl = getSponsorUrl(repo);
             const badges = getBadges(repo);
             return {
               name: repo.name,
               category: repo.language ? `${repo.language} • ${stars}` : `Project • ${stars}`,
               description: repo.description || "No description provided yet.",
               repoUrl: repo.html_url,
+              sponsorUrl,
               homepage: repo.homepage || "",
               starCount,
               badges,
