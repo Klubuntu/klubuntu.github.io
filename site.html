@@ -315,10 +315,10 @@
 
       const badges = document.createElement("div");
       badges.className = "badges";
-      for (const [index, badgeName] of project.badges.entries()) {
+      for (const badgeName of project.badges) {
         const badge = document.createElement("span");
         badge.className = "badge";
-        if (index === 0) {
+        if (badgeName === project.languageBadge) {
           const icon = document.createElement("span");
           icon.className = "badge-icon";
           icon.setAttribute("aria-hidden", "true");
@@ -406,6 +406,7 @@
             const badges = getBadges(repo);
             return {
               name: repo.name,
+              languageBadge: repo.language || "General",
               category: repo.language ? `${repo.language} • ${stars}` : `Project • ${stars}`,
               description: repo.description || "No description provided yet.",
               repoUrl: repo.html_url,
