@@ -653,9 +653,8 @@
       return repo.topics.slice(0, MAX_TAGS_PER_REPO);
     }
 
-    function getSponsorUrl(repo) {
-      const ownerLogin = repo?.owner?.login;
-      if (!ownerLogin) return "";
+    function getSponsorUrl(ownerLogin, isSponsorable) {
+      if (!ownerLogin || !isSponsorable) return "";
       return `https://github.com/sponsors/${ownerLogin}`;
     }
 
@@ -1013,14 +1012,23 @@
         filtersContainer.innerHTML = "";
 
         // Fetch up to 100 repos to sort and display by star count.
-        const response = await fetch(`https://api.github.com/users/${selectedOwner}/repos?per_page=100&sort=updated`, {
-          headers: {
-            Accept: "application/vnd.github+json"
-          }
-        });
-        if (!response.ok) throw new Error("Failed to fetch repositories");
+        const [reposResponse, ownerResponse] = await Promise.all([
+          fetch(`https://api.github.com/users/${selectedOwner}/repos?per_page=100&sort=updated`, {
+            headers: {
+              Accept: "application/vnd.github+json"
+            }
+          }),
+          fetch(`https://api.github.com/users/${selectedOwner}`, {
+            headers: {
+              Accept: "application/vnd.github+json"
+            }
+          })
+        ]);
+        if (!reposResponse.ok) throw new Error("Failed to fetch repositories");
 
-        const repositories = await response.json();
+        const repositories = await reposResponse.json();
+        const ownerProfile = ownerResponse.ok ? await ownerResponse.json() : null;
+        const sponsorUrl = getSponsorUrl(selectedOwner, Boolean(ownerProfile?.is_sponsorable));
         allProjects = repositories
           .filter(repo => !repo.fork && !repo.archived && !repo.disabled)
           .map(repo => {
@@ -1028,7 +1036,6 @@
             const stars = formatStars(starCount);
             const tags = getTags(repo);
             const filterTags = getFilterTags(repo);
-            const sponsorUrl = getSponsorUrl(repo);
             const badges = getBadges(repo);
             return {
               name: repo.name,
