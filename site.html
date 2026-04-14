@@ -642,6 +642,11 @@
       return repo.topics.slice(0, MAX_TAGS_PER_REPO);
     }
 
+    function getFilterTags(repo) {
+      if (!Array.isArray(repo.topics)) return [];
+      return repo.topics;
+    }
+
     function isRecentUpdate(updatedAtText) {
       if (!updatedAtText) return false;
       const timestamp = new Date(updatedAtText).getTime();
@@ -775,7 +780,7 @@
 
     function getProjectFilters(project) {
       if (selectedFilterMode === FILTER_MODE_NONE) return [];
-      return selectedFilterMode === FILTER_MODE_TAGS ? project.tags : project.badges;
+      return selectedFilterMode === FILTER_MODE_TAGS ? (project.filterTags || project.tags) : project.badges;
     }
 
     function updateModeButtons() {
@@ -988,6 +993,7 @@
             const starCount = repo.stargazers_count || 0;
             const stars = formatStars(starCount);
             const tags = getTags(repo);
+            const filterTags = getFilterTags(repo);
             const badges = getBadges(repo);
             return {
               name: repo.name,
@@ -997,7 +1003,8 @@
               homepage: repo.homepage || "",
               starCount,
               badges,
-              tags
+              tags,
+              filterTags
             };
           })
           .sort(sortByStarsDesc);
