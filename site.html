@@ -134,6 +134,14 @@
 
     .secret-cta {
       margin: 16px 2px 0;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity .3s ease, transform .3s ease;
+    }
+
+    .secret-cta.is-visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .secret-launch {
@@ -152,13 +160,51 @@
     }
 
     .secret-builder {
-      margin: 14px 0 16px;
+      margin: 0;
       border: 1px solid var(--border);
       border-radius: 16px;
       background: rgba(18, 23, 36, .8);
       padding: 16px;
       display: grid;
       gap: 10px;
+    }
+
+    .secret-builder-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      background: rgba(2, 5, 12, .86);
+      padding: 24px;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s ease;
+    }
+
+    .secret-builder-frame {
+      width: min(860px, 94vw);
+      max-height: 90vh;
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+      opacity: 0;
+      transform: translateY(16px) scale(.985);
+      transition: opacity .3s ease, transform .3s ease;
+    }
+
+    .secret-frame-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .secret-close {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .05);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
     }
 
     .secret-builder h3,
@@ -201,6 +247,23 @@
       border-radius: 10px;
       padding: 8px 10px;
       font-size: .85rem;
+    }
+
+    body.secret-frame-active .wrap > * {
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity .25s ease, transform .25s ease;
+    }
+
+    body.secret-frame-active .secret-builder-overlay {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    body.secret-frame-active .secret-builder-frame {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
 
     .filters {
@@ -261,6 +324,13 @@
         opacity: 1;
         transform: none;
         transition: border-color .2s ease;
+      }
+
+      .secret-cta,
+      .secret-builder-overlay,
+      .secret-builder-frame,
+      body.secret-frame-active .wrap > * {
+        transition: none;
       }
     }
 
@@ -377,6 +447,10 @@
       <button id="secret-launch" type="button" class="secret-launch"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Make your own</button>
     </div>
 
+    <div id="secret-reset-wrap" class="secret-cta" hidden>
+      <button id="secret-reset" type="button" class="secret-close"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Return to normal</button>
+    </div>
+
     <div class="section-head">
       <h2>Featured Work</h2>
       <p id="project-count">Scanning repositories…</p>
@@ -397,35 +471,42 @@
       </div>
     </div>
 
-    <section id="secret-builder" class="secret-builder" hidden>
-      <h3>Secret Showcase Builder</h3>
-      <p>Add users/orgs and options, then generate your private SC link.</p>
-      <label for="secret-sources">GitHub users/orgs (comma-separated)</label>
-      <input id="secret-sources" class="secret-input" type="text" placeholder="Klubuntu, RevoProject, your-org">
-      <div class="secret-options">
-        <label><input id="opt-show-badges" type="checkbox" checked> Show badges</label>
-        <label><input id="opt-show-tags" type="checkbox" checked> Show tags</label>
-      </div>
-      <div class="secret-options">
-        <label for="opt-sort-badges">Sort badges</label>
-        <select id="opt-sort-badges" class="secret-select">
-          <option value="default">Default</option>
-          <option value="alpha">A→Z</option>
-        </select>
-        <label for="opt-sort-filters">Sort filters</label>
-        <select id="opt-sort-filters" class="secret-select">
-          <option value="alpha">A→Z</option>
-          <option value="frequency">By usage</option>
-        </select>
-      </div>
-      <p id="secret-message" class="secret-message" aria-live="polite"></p>
-      <button id="secret-generate" type="button" class="secret-launch"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Generate</button>
-    </section>
-
     <nav id="badge-filters" class="filters" aria-label="Filter projects by badges"></nav>
     <section id="projects" class="grid" aria-live="polite"></section>
     <footer>Built for klubuntu.github.io</footer>
   </main>
+
+  <div id="secret-builder-overlay" class="secret-builder-overlay" hidden>
+    <div class="secret-builder-frame" role="dialog" aria-modal="true" aria-labelledby="secret-builder-title">
+      <div class="secret-frame-actions">
+        <button id="secret-close" type="button" class="secret-close">Close</button>
+      </div>
+      <section id="secret-builder" class="secret-builder">
+        <h3 id="secret-builder-title">Secret Showcase Builder</h3>
+        <p>Add users/orgs and options, then generate your private SC link.</p>
+        <label for="secret-sources">GitHub users/orgs (comma-separated)</label>
+        <input id="secret-sources" class="secret-input" type="text" placeholder="Klubuntu, RevoProject, your-org">
+        <div class="secret-options">
+          <label><input id="opt-show-badges" type="checkbox" checked> Show badges</label>
+          <label><input id="opt-show-tags" type="checkbox" checked> Show tags</label>
+        </div>
+        <div class="secret-options">
+          <label for="opt-sort-badges">Sort badges</label>
+          <select id="opt-sort-badges" class="secret-select">
+            <option value="default">Default</option>
+            <option value="alpha">A→Z</option>
+          </select>
+          <label for="opt-sort-filters">Sort filters</label>
+          <select id="opt-sort-filters" class="secret-select">
+            <option value="alpha">A→Z</option>
+            <option value="frequency">By usage</option>
+          </select>
+        </div>
+        <p id="secret-message" class="secret-message" aria-live="polite"></p>
+        <button id="secret-generate" type="button" class="secret-launch"><i class="fa-solid fa-rocket" aria-hidden="true"></i> Generate</button>
+      </section>
+    </div>
+  </div>
 
   <script>
     const container = document.getElementById("projects");
@@ -435,7 +516,11 @@
     const ownerSelect = document.getElementById("owner-select");
     const easterTrigger = document.getElementById("easter-trigger");
     const secretCtaWrap = document.getElementById("secret-cta-wrap");
+    const secretResetWrap = document.getElementById("secret-reset-wrap");
+    const secretReset = document.getElementById("secret-reset");
     const secretLaunch = document.getElementById("secret-launch");
+    const secretBuilderOverlay = document.getElementById("secret-builder-overlay");
+    const secretClose = document.getElementById("secret-close");
     const secretBuilder = document.getElementById("secret-builder");
     const secretSourcesInput = document.getElementById("secret-sources");
     const optShowBadges = document.getElementById("opt-show-badges");
@@ -458,6 +543,7 @@
     let selectedFilterMode = FILTER_MODE_BADGES;
     let easterClickCount = 0;
     let easterUnlocked = false;
+    let secretBuilderOpen = false;
     const displayOptions = {
       showBadges: true,
       showTags: true,
@@ -864,6 +950,39 @@
       if (easterUnlocked) return;
       easterUnlocked = true;
       secretCtaWrap.hidden = false;
+      requestAnimationFrame(() => secretCtaWrap.classList.add("is-visible"));
+    }
+
+    function setSecretBuilderOpen(isOpen) {
+      secretBuilderOpen = isOpen;
+      if (isOpen) {
+        secretBuilderOverlay.hidden = false;
+        requestAnimationFrame(() => {
+          document.body.classList.add("secret-frame-active");
+          secretSourcesInput.focus();
+        });
+        return;
+      }
+
+      document.body.classList.remove("secret-frame-active");
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (prefersReducedMotion) {
+        secretBuilderOverlay.hidden = true;
+        return;
+      }
+      setTimeout(() => {
+        if (!secretBuilderOpen) secretBuilderOverlay.hidden = true;
+      }, 300);
+    }
+
+    function showSecretResetControl() {
+      secretResetWrap.hidden = false;
+      requestAnimationFrame(() => secretResetWrap.classList.add("is-visible"));
+    }
+
+    function hideSecretResetControl() {
+      secretResetWrap.classList.remove("is-visible");
+      secretResetWrap.hidden = true;
     }
 
     function applySecretConfig(config) {
@@ -885,6 +1004,7 @@
       optSortBadges.value = displayOptions.sortBadges;
       optSortFilters.value = displayOptions.sortFilters;
       unlockEasterEgg();
+      showSecretResetControl();
     }
 
     function buildSecretConfigFromForm() {
@@ -921,13 +1041,29 @@
     });
 
     secretLaunch.addEventListener("click", () => {
-      secretBuilder.hidden = !secretBuilder.hidden;
+      setSecretBuilderOpen(true);
+    });
+
+    secretClose.addEventListener("click", () => {
+      setSecretBuilderOpen(false);
+    });
+
+    secretBuilderOverlay.addEventListener("click", event => {
+      if (event.target !== secretBuilderOverlay) return;
+      setSecretBuilderOpen(false);
+    });
+
+    secretReset.addEventListener("click", () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("SC");
+      window.location.assign(url.toString());
     });
 
     secretGenerate.addEventListener("click", () => {
       const config = buildSecretConfigFromForm();
       if (!config) return;
       setSecretMessage("Generating secret link…");
+      setSecretBuilderOpen(false);
       const url = new URL(window.location.href);
       url.searchParams.set("SC", toBase64(JSON.stringify(config)));
       window.location.assign(url.toString());
