@@ -592,6 +592,7 @@
     const secretMessage = document.getElementById("secret-message");
     const secretGenerate = document.getElementById("secret-generate");
     const filterModeButtons = Array.from(document.querySelectorAll("[data-mode]"));
+    const filterModeSwitch = document.querySelector(".mode-switch");
     const ALL_FILTER = "All";
     const MAX_BADGES_PER_REPO = 5;
     const MAX_TAGS_PER_REPO = 5;
@@ -600,6 +601,7 @@
     const MAGIC_MODAL_CLICK_THRESHOLD = 11;
     const FILTER_MODE_TAGS = "tags";
     const FILTER_MODE_BADGES = "badges";
+    const FILTER_MODE_NONE = "none";
     const ownerOptionsDefault = Array.from(ownerSelect.options).map(option => option.value);
     let ownerOptionsCurrent = [...ownerOptionsDefault];
     let selectedOwner = ownerSelect.value;
@@ -655,9 +657,15 @@
     }
 
     function normalizeFilterMode() {
+      if (!displayOptions.showBadges && !displayOptions.showTags) {
+        selectedFilterMode = FILTER_MODE_NONE;
+        return;
+      }
+      if (selectedFilterMode === FILTER_MODE_NONE) {
+        selectedFilterMode = displayOptions.showBadges ? FILTER_MODE_BADGES : FILTER_MODE_TAGS;
+      }
       if (selectedFilterMode === FILTER_MODE_BADGES && !displayOptions.showBadges) selectedFilterMode = FILTER_MODE_TAGS;
       if (selectedFilterMode === FILTER_MODE_TAGS && !displayOptions.showTags) selectedFilterMode = FILTER_MODE_BADGES;
-      if (!displayOptions.showBadges && !displayOptions.showTags) displayOptions.showBadges = true;
     }
 
     function toBase64(text) {
@@ -755,18 +763,23 @@
     }
 
     function getProjectFilters(project) {
+      if (selectedFilterMode === FILTER_MODE_NONE) return [];
       return selectedFilterMode === FILTER_MODE_TAGS ? project.tags : project.badges;
     }
 
     function updateModeButtons() {
       normalizeFilterMode();
+      let visibleModeButtons = 0;
       for (const button of filterModeButtons) {
         const mode = button.dataset.mode;
         const modeEnabled = mode === FILTER_MODE_BADGES ? displayOptions.showBadges : displayOptions.showTags;
-        const isSelected = button.dataset.mode === selectedFilterMode;
+        if (modeEnabled) visibleModeButtons += 1;
+        const isSelected = modeEnabled && button.dataset.mode === selectedFilterMode;
+        button.hidden = !modeEnabled;
         button.disabled = !modeEnabled;
         button.setAttribute("aria-pressed", String(isSelected));
       }
+      if (filterModeSwitch) filterModeSwitch.hidden = visibleModeButtons === 0;
     }
 
     function createCard(project) {
@@ -870,6 +883,13 @@
 
     function renderFilters(projects) {
       normalizeFilterMode();
+      if (selectedFilterMode === FILTER_MODE_NONE) {
+        selectedFilter = ALL_FILTER;
+        filtersContainer.hidden = true;
+        filtersContainer.innerHTML = "";
+        return;
+      }
+      filtersContainer.hidden = false;
       const badgeSet = new Set();
       const usageCount = new Map();
       for (const project of projects) {
@@ -887,6 +907,7 @@
         return a.localeCompare(b);
       });
       const filters = [ALL_FILTER, ...filtersSorted];
+      if (!filters.includes(selectedFilter)) selectedFilter = ALL_FILTER;
       filtersContainer.setAttribute("aria-label", `Filter projects by ${selectedFilterMode}`);
       filtersContainer.innerHTML = "";
       for (const filter of filters) {
@@ -912,12 +933,13 @@
     }
 
     function renderProjectList() {
-      const visibleProjects = selectedFilter === ALL_FILTER
+      const hasFilterDimension = selectedFilterMode !== FILTER_MODE_NONE;
+      const visibleProjects = !hasFilterDimension || selectedFilter === ALL_FILTER
         ? allProjects
         : allProjects.filter(project => getProjectFilters(project).includes(selectedFilter));
 
       container.innerHTML = "";
-      count.textContent = `${visibleProjects.length} repositories • ${selectedOwner}${selectedFilter === ALL_FILTER ? "" : ` • filtered by ${selectedFilter}`}`;
+      count.textContent = `${visibleProjects.length} repositories • ${selectedOwner}${!hasFilterDimension || selectedFilter === ALL_FILTER ? "" : ` • filtered by ${selectedFilter}`}`;
       const cards = visibleProjects.map(project => createCard(project));
       setupCardReveal(cards);
 
@@ -1094,10 +1116,6 @@
       }
       const showBadges = optShowBadges.checked;
       const showTags = optShowTags.checked;
-      if (!showBadges && !showTags) {
-        setSecretMessage("Enable badges, tags, or both.", true);
-        return null;
-      }
       return {
         owners,
         showBadges,
